@@ -1,56 +1,108 @@
-# Welcome to your Expo app 👋
+<p align="center">
+  <img src="assets/images/icon.png" alt="System Design Academy logo" width="128" />
+</p>
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<h1 align="center">System Design Academy</h1>
 
-## Get started
+<p align="center">A phone you can put in airplane mode and still study from.</p>
 
-1. Install dependencies
+System Design Academy is an offline practice app for system design. Each day is a morning lesson and an evening lesson. You write an answer, mark a rubric, and say how sure you are. The app does not grade your prose. It schedules the next review from that self-assessment, keeps a streak, and stores everything in SQLite on the device.
 
-   ```bash
-   npm install
-   ```
+There is no account, no backend, and no analytics. Opening the app does not count as study. A session counts when you record an assessment.
 
-2. Start the app
+Curriculum `2026.10.1` spans **210 days** across 14 phases. **Days 1–14** are fully written. **Days 15–210** are planned outlines: visible in the curriculum, and impossible to mark complete until they are published.
 
-   ```bash
-   npx expo start
-   ```
+## A day
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+morning lesson          evening lesson
+10–25 minutes           same concepts, new question
+write ≥ 20 characters   write again
+mark the rubric         mark the rubric
+confidence 1–5          confidence 1–5
+        \                    /
+         spaced repetition
+         0 · 1 · 3 · 7 · 14 · 30 days
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+A struggle brings the concept back today. Shaky work holds the interval. Solid work pushes it out, and a concept is treated as mastered once the interval reaches 14 days. Missed days do not delete the curriculum queue or the review queue.
 
-### Other setup steps
+A marked rest day keeps a streak intact and does not add to it. An empty day ends the run. Today does not break the streak until the local day is over.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## The map
 
-## Learn more
+| | Phase | What it is for |
+|---|---|---|
+| 01 | Computer science and systems foundations | Processes, memory, CPU, Linux, and the path under a request |
+| 02 | Web architecture | Proxies, sessions, limits, and failure handling at the edge |
+| 03 | Data systems | Modeling, indexes, transactions, replication, sharding, recovery |
+| 04 | Caching and performance | Where a cache helps, how it lies, and what happens when it fails |
+| 05 | Distributed systems | Partial failure, consistency, consensus, backpressure |
+| 06 | Messaging and workers | Queues, logs, delivery guarantees, workflows that survive retries |
+| 07 | Scalability | Capacity, bottlenecks, and the cost of more machines |
+| 08 | Reliability and observability | SLOs, signals, incidents, and recovery that describes user harm |
+| 09 | Security and privacy | Trust boundaries, identity, secrets, and feature-shaped incidents |
+| 10 | Cloud and infrastructure | Containers, orchestration, identity, delivery, platform cost |
+| 11 | Advanced distributed data systems | Partitioning, streams, search, and multi-region writes |
+| 12 | Architecture patterns | Boundaries, data movement, and change without worshipping the diagram |
+| 13 | Real-world case studies | Shorteners, chat, feeds, search, video, payments, inventory |
+| 14 | Senior and staff-level judgment | ADRs, migrations, debt, incidents, and strategy |
 
-To learn more about developing your project with Expo, look at the following resources:
+Home shows today's day, the next lesson, streaks, and reviews that are due. Curriculum walks the phases. Revision holds due reviews, weak concepts, bookmarks, and unresolved misconceptions. Progress is a heatmap: squares fill from completed sessions and reviews, not from launches. Settings holds reminder times, appearance, export, import, and reset.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## On the device
 
-## Join the community
+- Lessons ship inside the app binary. Optional reading links open only after you confirm an alert.
+- Progress, drafts, notes, bookmarks, mastery, and settings live in `sysdapp.db`.
+- Reminders are at most two local notifications, 8:00 and 20:00 by default. Permission is requested from Settings, not on first launch. Copy names the lesson title and never includes the reference solution.
+- Export writes a JSON file (`sysdapp.backup`, version 1) through the share sheet. Import validates every field before it writes, in one transaction. Answers stay; lesson text always comes from the build you are running.
+- The database is not encrypted. Uninstalling the app deletes it. Export before you move phones.
+- Reset asks twice. It clears learning history and keeps reminder times and appearance.
 
-Join our community of developers creating universal apps.
+## Run it
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Node.js 22 or newer, npm, and either Expo Go or a simulator.
+
+```bash
+npm install
+npm test
+npm run typecheck
+npx expo start
+```
+
+Open the project in Expo Go, an iOS simulator, or an Android emulator. There is no web target. With Expo Go, the first launch still needs the packager. After the bundle is loaded you can turn the network off. A development or production build does not need the packager at all.
+
+`npm test` runs the engine, curriculum, backup, and SQLite tests with Node's test runner. Domain code stays free of Expo except at the edges: the SQLite adapter, notification scheduling, and the share sheet.
+
+| Profile | What it builds |
+|---|---|
+| `development` | Dev client, iOS simulator |
+| `preview` | Internal distribution |
+| `production` | Store build, version auto-increment |
+
+A store build has not been run from this workspace. `ios/` and `android/` are generated by Expo prebuild. Change native behavior in `app.json`, not in those folders.
+
+## Code
+
+| Path | Role |
+|---|---|
+| `src/app` | Screens. Expo Router. Tabs plus lesson, phase, and resources. |
+| `src/curriculum` | Bundled lessons. The loader refuses to start if validation fails. |
+| `src/engine` | Dates, assessment, repetition, streaks, heatmap, and the next lesson. Pure. |
+| `src/db` | Migrations and the repository. |
+| `src/notifications` | Reminder planning is pure. The native module only schedules that plan. |
+| `src/backup` | JSON validation, share sheet, document picker. |
+| `src/state` | Opens the database, loads a snapshot, reconciles reminders. |
+| `test` | Node tests. Not part of the app bundle. |
+
+Expo SDK 58 · React Native · TypeScript · Expo Router · SQLite.
+
+## Guides
+
+- [Local development](docs/development.md)
+- [Testing](docs/testing.md)
+- [Install on a device](docs/device-install.md)
+- [Production builds](docs/distribution.md)
+- [Notifications](docs/notifications.md)
+- [Backup and restore](docs/backup.md)
+- [Curriculum authoring](docs/curriculum.md)

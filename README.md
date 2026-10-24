@@ -4,7 +4,7 @@
 
 <h1 align="center">System Design Academy</h1>
 
-<p align="center">A phone you can put in airplane mode and still study from.</p>
+<p align="center">An App you can put in airplane mode and still study from.</p>
 
 System Design Academy is an offline practice app for system design. Each day is a morning lesson and an evening lesson. You write an answer, mark a rubric, and say how sure you are. The app does not grade your prose. It schedules the next review from that self-assessment, keeps a streak, and stores everything in SQLite on the device.
 

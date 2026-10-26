@@ -38,9 +38,11 @@ export default function HomeScreen() {
         </Card>
       ) : (
         <Card>
-          <AppText role="title">Authored lessons are complete</AppText>
+          <AppText role="title">{home.upcomingTitle ? 'Written lessons are complete' : 'The curriculum is complete'}</AppText>
           <AppText>
-            The next planned day is {home.upcomingTitle}. It is visible in the curriculum and cannot be marked complete until it is published. Your history stays on this device.
+            {home.upcomingTitle
+              ? `The next planned day is ${home.upcomingTitle}. It is visible in the curriculum and cannot be marked complete until it is published. Your history stays on this device.`
+              : 'Every lesson is recorded. Reviews still come due from your self-assessments. Your history stays on this device.'}
           </AppText>
         </Card>
       )}

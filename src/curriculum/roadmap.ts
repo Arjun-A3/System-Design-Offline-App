@@ -1,5 +1,4 @@
-import { buildPlannedDay } from './author';
-import type { Concept, CurriculumDay, Difficulty, PhaseId } from './types';
+import type { Concept, Difficulty, PhaseId } from './types';
 
 type Topic = {
   slug: string;
@@ -299,34 +298,41 @@ function topic(row: readonly string[]): Topic {
   return { slug, title, morning, evening };
 }
 
-export const plannedDays: CurriculumDay[] = [];
-export const plannedConcepts: Concept[] = [];
+export type RoadmapTopic = {
+  dayNumber: number;
+  slug: string;
+  title: string;
+  phaseId: PhaseId;
+  difficulty: Difficulty;
+  morningObjective: string;
+  eveningObjective: string;
+};
+
+export const roadmapTopics: RoadmapTopic[] = [];
+export const roadmapConcepts: Concept[] = [];
 
 let dayNumber = 15;
 for (const plan of plans) {
   for (const item of plan.topics) {
-    const conceptId = `concept.${item.slug}`;
-    plannedConcepts.push({
-      id: conceptId,
+    roadmapTopics.push({
+      dayNumber,
+      slug: item.slug,
+      title: item.title,
+      phaseId: plan.phaseId,
+      difficulty: plan.difficulty,
+      morningObjective: item.morning,
+      eveningObjective: item.evening,
+    });
+    roadmapConcepts.push({
+      id: `concept.${item.slug}`,
       title: item.title,
       summary: item.morning,
       phaseId: plan.phaseId,
     });
-    plannedDays.push(
-      buildPlannedDay({
-        day: dayNumber,
-        phaseId: plan.phaseId,
-        title: item.title,
-        conceptId,
-        difficulty: plan.difficulty,
-        morningObjective: item.morning,
-        eveningObjective: item.evening,
-        morningIntent: `${item.title}. ${item.morning} This session is on the planned path and is not fully authored yet. It cannot be completed, so an outline is never recorded as mastery.`,
-        eveningIntent: `${item.evening} The evening session applies the same concept. It stays locked until a curriculum update publishes the full exercise.`,
-      }),
-    );
     dayNumber += 1;
   }
 }
 
-export const NEXT_PLANNED_DAY_NUMBER = dayNumber;
+if (dayNumber !== 211) {
+  throw new Error(`Roadmap should cover days 15 through 210. Next free number was ${dayNumber}.`);
+}

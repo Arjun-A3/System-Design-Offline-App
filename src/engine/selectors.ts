@@ -95,10 +95,11 @@ export function selectHome(snapshot: LearningSnapshot, today: string): HomeSumma
   );
   const next = nextCurriculumSession(curriculumDays, completed);
   const focusDay =
-    curriculumDays.find((day) => day.number === (next?.dayNumber ?? 14)) ?? curriculumDays[0];
+    curriculumDays.find((day) => day.number === (next?.dayNumber ?? curriculumDays[curriculumDays.length - 1]?.number)) ??
+    curriculumDays[0];
   const streaks = computeStreaks(activityByDate(snapshot), today);
   const due = snapshot.revisions.filter((item) => item.status === 'scheduled' && item.dueOn <= today);
-  const upcoming = next ? null : curriculumDays.find((day) => day.number === 15);
+  const upcoming = next ? null : curriculumDays.find((day) => day.morning.depth === 'planned' || day.evening.depth === 'planned');
   return {
     curriculumVersion: CURRICULUM_VERSION,
     finishedAuthored: next === null,

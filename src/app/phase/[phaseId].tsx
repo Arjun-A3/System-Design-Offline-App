@@ -26,7 +26,7 @@ export default function PhaseScreen() {
       <AppText role="small">{phase.topics.join(' · ')}</AppText>
       {days.map((day) => (
         <Card key={day.id}>
-          <AppText role="label">Day {day.number} · {day.number <= 14 ? 'Authored' : 'Planned'}</AppText>
+          <AppText role="label">Day {day.number} · {day.morning.depth === 'full' ? 'Lesson' : 'Planned'}</AppText>
           <AppText role="title">{day.title}</AppText>
           <AppText role="small">Requires {day.morning.prerequisiteSessionIds.join(', ') || 'nothing'}</AppText>
           <AppText role="small">Morning {completed.has(day.morning.id) ? 'complete' : day.morning.depth} · {day.morning.difficulty}</AppText>

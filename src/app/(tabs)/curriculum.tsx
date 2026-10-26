@@ -20,8 +20,8 @@ export default function CurriculumScreen() {
   const days = curriculumDays.filter((day) => {
     const text = `${day.title} ${day.phaseId} ${day.morning.title} ${day.evening.title}`.toLowerCase();
     if (query && !text.includes(query.trim().toLowerCase())) return false;
-    if (filter === 'authored') return day.number <= 14;
-    if (filter === 'planned') return day.number > 14;
+    if (filter === 'authored') return day.morning.depth === 'full' && day.evening.depth === 'full';
+    if (filter === 'planned') return day.morning.depth === 'planned' || day.evening.depth === 'planned';
     if (filter === 'foundational' || filter === 'intermediate' || filter === 'advanced') {
       return day.morning.difficulty === filter;
     }
@@ -31,7 +31,7 @@ export default function CurriculumScreen() {
   return (
     <Screen tab>
       <AppText role="display">Curriculum</AppText>
-      <AppText role="small">210 days in a fixed order. The first 14 are fully written. Later days keep their place and cannot be completed early.</AppText>
+      <AppText role="small">210 days in a fixed order. A missed day does not unlock the next lesson.</AppText>
       <Field value={query} onChangeText={setQuery} placeholder="Search lessons" accessibilityLabel="Search lessons" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {filters.map((item) => (
@@ -44,7 +44,7 @@ export default function CurriculumScreen() {
         <Card key={phase.id}>
           <AppText role="title">{phase.title}</AppText>
           <AppText role="small">
-            {phase.completed}/{phase.authored} authored sessions · {phase.planned} planned
+            {phase.completed}/{phase.authored} lessons{phase.planned ? ` · ${phase.planned} planned` : ''}
           </AppText>
           <Button
             label="Open phase"
@@ -62,7 +62,7 @@ export default function CurriculumScreen() {
             <AppText role="label">Day {day.number} · {phase?.title}</AppText>
             <AppText role="title">{day.title}</AppText>
             <AppText role="small">
-              {day.number <= 14 ? 'Authored' : 'Planned'} · morning {morningDone ? 'done' : 'open'} · evening {eveningDone ? 'done' : 'open'}
+              {day.morning.depth === 'full' ? 'Lesson' : 'Planned'} · morning {morningDone ? 'done' : 'open'} · evening {eveningDone ? 'done' : 'open'}
             </AppText>
             <Button label="Morning" tone="secondary" onPress={() => openSession(day.morning.id)} />
             <Button label="Evening" tone="secondary" onPress={() => openSession(day.evening.id)} />

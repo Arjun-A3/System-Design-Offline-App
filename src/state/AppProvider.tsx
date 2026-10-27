@@ -59,7 +59,7 @@ type AcademyValue = {
   updateNotes: (sessionId: string, notes: string) => Promise<void>;
   toggleBookmark: (sessionId: string, bookmarked: boolean) => Promise<void>;
   postpone: (sessionId: string) => Promise<void>;
-  submit: (session: FullSession, answer: string, marks: Record<string, CriterionMark>, confidence: number) => Promise<void>;
+  submit: (session: FullSession, answer: string, marks: Record<string, CriterionMark>, confidence: number) => Promise<boolean>;
   restToday: (resting: boolean) => Promise<void>;
   updateSettings: (settings: Pick<SettingsRecord, 'theme' | 'fontScale' | 'reduceMotion'>) => Promise<void>;
   updateReminders: (prefs: NotificationRecord) => Promise<void>;
@@ -252,6 +252,7 @@ export function AcademyProvider({ children }: { children: ReactNode }) {
         const loaded = await loadSnapshot(db);
         setSnapshot(loaded);
         await syncReminders(loaded, true);
+        return plan.firstCompletion;
       },
       async restToday(resting) {
         await setRestDay(requireDb(), localDateISO(new Date()), resting, new Date().toISOString());

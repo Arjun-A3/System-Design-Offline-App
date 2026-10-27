@@ -6,7 +6,7 @@ import { conceptsById, resourcesById, sessionsById } from '@/curriculum';
 import type { CriterionMark, FullSession } from '@/curriculum/types';
 import { prerequisiteBlock } from '@/engine/selectors';
 import { useAcademy } from '@/state/AppProvider';
-import { AppText, Button, Card, Field, Screen } from '@/ui/components';
+import { AppText, Button, Card, CopyButton, Field, Screen, Toast } from '@/ui/components';
 
 const marks: { id: CriterionMark; label: string }[] = [
   { id: 'understood_independently', label: 'Understood independently' },
@@ -25,6 +25,7 @@ export default function LessonScreen() {
   const [confidence, setConfidence] = useState<number | null>(record?.lastConfidence ?? null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
   const [hydratedFor, setHydratedFor] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function LessonScreen() {
   const blocked = prerequisiteBlock(session, academy.snapshot);
 
   return (
-    <Screen>
+    <Screen overlay={<Toast notice={toast} />}>
       <Stack.Screen options={{ title: `Day ${session.dayNumber}` }} />
       <AppText role="label">
         Day {session.dayNumber} · {session.slot} · {session.difficulty} · {session.durationMinutes} min
@@ -111,8 +112,11 @@ export default function LessonScreen() {
               setError(null);
               await academy.saveAnswer(session.id, answer);
               if (confidence === null) throw new Error('Choose a confidence rating from 1 to 5.');
-              await academy.submit(session, answer, rubric, confidence);
+              const firstCompletion = await academy.submit(session, answer, rubric, confidence);
               setSaved('Recorded. This score is your own assessment. The app did not grade the writing.');
+              if (firstCompletion) {
+                setToast({ id: Date.now(), message: 'Assessment completed for the first time.' });
+              }
             } catch (caught) {
               setError(caught instanceof Error ? caught.message : 'Could not save the session.');
             }
@@ -209,10 +213,16 @@ function FullLesson({
     <>
       <AppText role="title">Why it matters</AppText>
       <Prose text={session.whyItMatters} />
-      <AppText role="title">Explanation</AppText>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <AppText role="title">Explanation</AppText>
+        <CopyButton text={session.explanation} label="Copy explanation" />
+      </View>
       <Prose text={session.explanation} />
       <Card>
-        <AppText role="label">Question</AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <AppText role="label">Question</AppText>
+          <CopyButton text={session.question} label="Copy question" />
+        </View>
         <AppText>{session.question}</AppText>
       </Card>
       <AppText role="label">Your answer</AppText>

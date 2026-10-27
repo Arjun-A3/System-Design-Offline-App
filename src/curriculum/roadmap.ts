@@ -1,4 +1,5 @@
-import type { Concept, Difficulty, PhaseId } from './types';
+import { buildPlannedDay } from './author';
+import type { Concept, CurriculumDay, Difficulty, PhaseId } from './types';
 
 type Topic = {
   slug: string;
@@ -336,3 +337,19 @@ for (const plan of plans) {
 if (dayNumber !== 211) {
   throw new Error(`Roadmap should cover days 15 through 210. Next free number was ${dayNumber}.`);
 }
+
+export const plannedConcepts: Concept[] = roadmapConcepts;
+
+export const plannedDays: CurriculumDay[] = roadmapTopics.map((topic) =>
+  buildPlannedDay({
+    day: topic.dayNumber,
+    phaseId: topic.phaseId,
+    title: topic.title,
+    conceptId: `concept.${topic.slug}`,
+    difficulty: topic.difficulty,
+    morningObjective: topic.morningObjective,
+    eveningObjective: topic.eveningObjective,
+    morningIntent: `${topic.title}. ${topic.morningObjective} This session is on the planned path and is not fully authored yet. It cannot be completed, so an outline is never recorded as mastery.`,
+    eveningIntent: `${topic.eveningObjective} The evening session applies the same concept. It stays locked until a curriculum update publishes the full exercise.`,
+  }),
+);

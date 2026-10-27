@@ -1,5 +1,8 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import * as Clipboard from 'expo-clipboard';
 import {
+  AccessibilityInfo,
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -58,24 +61,29 @@ export function AppText({
 export function Screen({
   children,
   tab = false,
+  overlay,
 }: {
   children: ReactNode;
   tab?: boolean;
+  overlay?: ReactNode;
 }) {
   const { colors } = useAcademy();
   const insets = useSafeAreaInsets();
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{
-        paddingHorizontal: 20,
-        paddingTop: tab ? Math.max(insets.top, 16) : 16,
-        paddingBottom: insets.bottom + (tab ? 112 : 32),
-        gap: 14,
-      }}
-      keyboardShouldPersistTaps="handled">
-      <View style={styles.column}>{children}</View>
-    </ScrollView>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: tab ? Math.max(insets.top, 16) : 16,
+          paddingBottom: insets.bottom + (tab ? 112 : 32),
+          gap: 14,
+        }}
+        keyboardShouldPersistTaps="handled">
+        <View style={styles.column}>{children}</View>
+      </ScrollView>
+      {overlay}
+    </View>
   );
 }
 
@@ -138,6 +146,103 @@ export function Pill({ label, active = false }: { label: string; active?: boolea
   );
 }
 
+export function CopyButton({ text, label }: { text: string; label: string }) {
+  const { colors } = useAcademy();
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
+
+  function onPress() {
+    void Clipboard.setStringAsync(text.trim())
+      .then((saved) => {
+        if (saved === false) return;
+        setCopied(true);
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => setCopied(false), 1600);
+      })
+      .catch(() => setCopied(false));
+  }
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={copied ? 'Copied' : label}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.copyButton,
+        { backgroundColor: colors.surface2, opacity: pressed ? 0.82 : 1 },
+      ]}>
+      <AppText role="small" color={colors.ink}>
+        {copied ? 'Copied' : 'Copy'}
+      </AppText>
+    </Pressable>
+  );
+}
+
+export function Toast({ notice }: { notice: { id: number; message: string } | null }) {
+  const { colors, reduceMotion } = useAcademy();
+  const insets = useSafeAreaInsets();
+  const opacity = useRef(new Animated.Value(0)).current;
+  const [shown, setShown] = useState<{ id: number; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!notice) return;
+    setShown(notice);
+    AccessibilityInfo.announceForAccessibility(notice.message);
+  }, [notice]);
+
+  useEffect(() => {
+    if (!shown) return;
+    opacity.stopAnimation();
+    if (reduceMotion) {
+      opacity.setValue(1);
+    } else {
+      opacity.setValue(0);
+      Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+    }
+    const hide = setTimeout(() => {
+      const dismiss = () => setShown((current) => (current?.id === shown.id ? null : current));
+      if (reduceMotion) {
+        dismiss();
+        return;
+      }
+      Animated.timing(opacity, { toValue: 0, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+        if (finished) dismiss();
+      });
+    }, 2600);
+    return () => {
+      clearTimeout(hide);
+      opacity.stopAnimation();
+    };
+  }, [shown, opacity, reduceMotion]);
+
+  if (!shown) return null;
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      accessibilityLiveRegion="polite"
+      accessibilityRole="alert"
+      style={[
+        styles.toast,
+        {
+          bottom: insets.bottom + 20,
+          backgroundColor: colors.ink,
+          opacity,
+          zIndex: 20,
+          elevation: 8,
+        },
+      ]}>
+      <AppText color={colors.bg}>{shown.message}</AppText>
+    </Animated.View>
+  );
+}
+
 export function Field(props: TextInputProps) {
   const { colors, fontScale } = useAcademy();
   return (
@@ -174,4 +279,22 @@ const styles = StyleSheet.create({
   },
   pill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'flex-start' },
   field: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, textAlignVertical: 'top' },
+  copyButton: {
+    minHeight: 44,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  toast: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    maxWidth: 720,
+    alignSelf: 'center',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
 });
